@@ -1,0 +1,7 @@
+print("I will now count my chicks!")
+print("Hens, ", 25 + 30/6)
+print("Roosters, ", 100 - 25*3%4)
+print(3 + 1 + 2 - 5 + 4%2 - 1/4 + 6)
+print(3 + 5 < 5 - 7)
+print("what is 3 + 2?", 3 + 2)
+print('Is it greater?', 5 <= -2)

@@ -3,8 +3,8 @@
 import wx
 import numpy as np
 import random
-
-from Linear_Regression.ML_Panel import Panel_Plotting_Helper, Panel_Controller
+from ML_Panel import Panel_Plotting_Helper, Panel_Controller
+from Machine_Learning_Tools import Machine_Learning_Tools
 
 
 class ML_Frame(wx.Frame):
@@ -15,15 +15,14 @@ class ML_Frame(wx.Frame):
 	    wx.Frame.__init__(self,parent, id, 'linear regression frame',
                 style=wx.DEFAULT_FRAME_STYLE,
                 size=(self.w, self.h))
-
-	    #self.splitter = wx.SplitterWindow(self, size=self.GetSize())
 		
 	    self.panel_plotting_helper = Panel_Plotting_Helper(self)
+	    self.mlt = Machine_Learning_Tools(self.panel_plotting_helper)
 	    self.panel_controller = Panel_Controller(self)
-
-
-	    #self.splitter.SplitHorizontally(self.panel_plotting_helper, self.panel_controller)
-	    sizer = wx.FlexGridSizer(2, 1, 10, 10)
+	    self.panel_controller.make_test_items(self.mlt.features)
+	    self.panel_controller.updated_algo_choice(self.mlt.algo_choices)	
+		
+	    sizer = wx.FlexGridSizer(2, 1, 0, 0)
 	    sizer.Add(self.panel_plotting_helper, 1, wx.EXPAND | wx.ALL)
 	    sizer.Add(self.panel_controller, 1, wx.EXPAND | wx.ALL)
 	    sizer.AddGrowableRow(0, 0)

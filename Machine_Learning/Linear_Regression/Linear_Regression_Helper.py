@@ -82,15 +82,18 @@ class Linear_Regression_Helper(object):
 		        #self.compute_cost(theta)
 				
 		        end_theta[i, :], J_history[i, :] = self.gradient_descent(theta, alphas[i], iters)
+		        #print(np.dot(self.data, end_theta[i,:].transpose()))	
 		        self.result[str(alphas[i])] = { 
 			        'data': {
 			            'x': data.iloc[:,0],
 			            'y': np.dot(self.data, end_theta[i,:].transpose())
 			        },
 				    'J_history': J_history[i,:].transpose(),
+				    'alphas': alphas,
 				    'theta': end_theta[i,:].transpose(),
-					'mean': mean,
-					'std': std
+				    'mean': mean,
+				    'std': std,
+				    'feature': self.n-1
 		        }
 		    # print(end_theta)
 		    return self.result
@@ -99,12 +102,14 @@ class Linear_Regression_Helper(object):
 		    print('Solving with Normal Equation ... \n')
 			
 		    end_theta = self.normal_equation()
+		    #print(np.dot(self.data, end_theta))	
 		    self.result['0'] = {
 			    'data': {
 				    'x': data.iloc[:,0],
 					'y': np.dot(self.data, end_theta)
 			    },
-				'theta': end_theta
+				'theta': end_theta,
+				'feature': self.n-1
 			}
 	    return self.result
 	

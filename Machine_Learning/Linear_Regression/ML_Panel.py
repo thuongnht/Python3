@@ -1,7 +1,9 @@
 # plot 2d matplotlib
 # plot 3d miyavi
 import numpy as np
+import pandas as pd
 import random
+import os
 
 import matplotlib
 matplotlib.interactive( True )
@@ -14,6 +16,7 @@ from matplotlib.lines import Line2D
 from matplotlib.legend import Legend
 
 import wx
+from wx.lib.stattext import GenStaticText
 
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
@@ -28,12 +31,13 @@ class Panel_Plotting_Helper(wx.Panel):
 
     def __init__(self, parent):
 	    w, h = parent.GetSize()
-	    wx.Panel.__init__(self, parent=parent, size=(w, 0.7*h))
+	    wx.Panel.__init__(self, parent=parent, size=(w, 0.7*h), style=wx.SUNKEN_BORDER)
 	    self.parent = parent
 	    self.legends = []
 	    self.legendpos = [0.5, 1]
 		
 	    self.fig = Figure(figsize=(12,6), dpi=90) # create a figure size 8x6 inches, 80 dots per inches
+	    self.splts = []	
 	    self.canvas = FigureCanvasWxAgg(self, -1, self.fig)
 	    self.toolbar = Toolbar(self.canvas) #matplotlib toolbar
 	    # additional toolbar	
@@ -54,6 +58,7 @@ class Panel_Plotting_Helper(wx.Panel):
 	    self.lines = []
 	    self.lined = dict()	
 	    self.draggableList = ['Text', 'Legend']	
+	    #print(self.toolbar.GetBackgroundColour())	
 		
 	    self.fig.canvas.mpl_connect('resize_event', self.squeeze_legend)
 	    self.fig.canvas.mpl_connect('pick_event', self.on_pick)
@@ -70,8 +75,9 @@ class Panel_Plotting_Helper(wx.Panel):
 	    for t in theta:
 		    comment += '    ' + str(t) + '\n'
 	    comment += ']'
+	    props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
 	    annotate = self.splts[index].annotate(comment, xy=(len(J)-1, J[len(J)-1]), xytext=(len(J)/2, (J[0]+J[len(J)-1])/2), \
-                                                arrowprops=dict(facecolor='black', shrink=0.05), fontsize=FONT_SIZE, picker=True)
+                                                arrowprops=dict(facecolor='black', shrink=0.05), bbox=props, fontsize=FONT_SIZE, picker=True)
 	    annotate.draggable(True)											
 		
     def plot_data_gradient_descent(self, X, y, format):
@@ -88,6 +94,7 @@ class Panel_Plotting_Helper(wx.Panel):
 		
     def plot_data(self, splt, X, y, format):   
 	    line, = splt.plot(X, y, 'ro', color=format['color'], label=format['label'], picker=True)
+	    self.set_ticks(splt, X, y)	
 	    self.lines.append(line)	
 	    splt.set_xlabel("X1", fontsize=FONT_SIZE)
 	    splt.set_ylabel("Y", fontsize=FONT_SIZE)
@@ -130,8 +137,9 @@ class Panel_Plotting_Helper(wx.Panel):
 	        comment += ']'
 		    # place a text box in upper left in axes coords
 	        props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
-	        self.splts[count].text(0.05, 0.95, comment, transform=self.splts[count].transAxes, fontsize=FONT_SIZE, verticalalignment='top', \
-			                                                bbox=props, picker=True)
+	        annotate = self.splts[count].annotate(comment, xy=(min(object[r]['data']['x']), max(object[r]['data']['y'])), \
+			                                               xytext=(min(object[r]['data']['x']), max(object[r]['data']['y'])), bbox=props, fontsize=FONT_SIZE, picker=True)
+	        annotate.draggable(True) 														
 	        count += 1
 	    self.show_legend()
 	    self.update_canvas()
@@ -240,16 +248,192 @@ class Panel_Controller(wx.Panel):
     
     def __init__(self, parent):
 	    w, h = parent.GetSize()
-	    wx.Panel.__init__(self, parent=parent, size=(w, 0.3*h))
+	    wx.Panel.__init__(self, parent=parent, size=(w, 0.2*h), style=wx.SUNKEN_BORDER)
+	    self.SetBackgroundColour((210,210,210))
 	    self.parent = parent
-		
-	    self.title = wx.StaticText(self, label="Panel Controllers")
+	    self.sample_algo_choice = []
+	    self.id = 0
+	    self.x_idx = -1
 	    
-	    sizer = wx.BoxSizer()
-	    sizer.Add(self.title, -1, wx.EXPAND | wx.ALL)
-	    self.SetSizer(sizer)
-			
+	    self.make_items()	
+		
+    def make_items(self):
+        algo_title = GenStaticText(self, label=" Choose Algorithm: ", style=wx.ALIGN_BOTTOM)
+        self.algo_choice = wx.ComboBox(self, self.id, size=(100,-1), choices=self.sample_algo_choice, style=wx.CB_READONLY)
+        self.id += 1 		
+        self.dataset = wx.Button(self, self.id, label="Choose Dataset")	
+        self.id += 1		
+        self.subsizer1 = wx.BoxSizer(wx.VERTICAL)
+        self.subsizer1.Add(self.dataset, 0, wx.EXPAND, 5)
+        subsubsizer1 = wx.BoxSizer(wx.HORIZONTAL)
+        subsubsizer1.Add(algo_title, 1, wx.EXPAND | wx.ALIGN_BOTTOM, 5)		
+        subsubsizer1.Add(self.algo_choice, 3, wx.EXPAND, 5)
+        self.subsizer1.Add(subsubsizer1, 0, wx.EXPAND, 5)	 	
+        		
+        subsubsizer2 = wx.BoxSizer(wx.HORIZONTAL)
+        test_title = GenStaticText(self, label="  Test Values:  ")
+        self.test_value = wx.TextCtrl(self, style=wx.CB_READONLY)
+        subsubsizer2.Add(test_title, 0, wx.EXPAND)
+        subsubsizer2.Add(self.test_value, 5, wx.EXPAND)		
+        self.subsizer2 = wx.BoxSizer(wx.VERTICAL)
+        self.subsizer2.Add(subsubsizer2, 0, wx.EXPAND, 5)
+        self.gensizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.show_x_values = wx.TextCtrl(self, self.id, style=wx.CB_READONLY)	
+        self.id += 1		
+        self.subsizer2.Add(self.show_x_values, 0, wx.EXPAND, 5)
+        self.subsizer2.Add(self.gensizer, 0, wx.EXPAND, 5)
+		
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(self.subsizer1, 0, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(self.subsizer2, 0, wx.EXPAND | wx.ALL, 5)
+        
+        self.SetSizer(sizer)
+		
+        self.dataset.Bind(wx.EVT_BUTTON, self.on_load_dataset)
+        self.algo_choice.Bind(wx.EVT_COMBOBOX, self.on_algo_changed)		
 
+    def make_test_items(self, features):
+        self.alpha_title = GenStaticText(self, label=" Choose Alpha: ", style=wx.ALIGN_CENTRE)	 
+        self.alpha_choice = wx.ComboBox(self, self.id, size=(100,-1), choices=[], style=wx.CB_READONLY)
+        self.alpha_title.Disable()
+        self.alpha_choice.Disable()
+        self.gensizer.Add(self.alpha_title, 0, wx.EXPAND, 5)			
+        self.gensizer.Add(self.alpha_choice, 0, wx.EXPAND, 5)	
+        self.id += 1
+		
+        self.sample_x_choice = [str(f) for f in features]
+        x_title = GenStaticText(self, label=" Choose X: ", style=wx.ALIGN_CENTRE)
+        self.x_values = np.zeros(len(features))	
+        self.x_choice = wx.ComboBox(self, self.id, size=(100,-1), choices=self.sample_x_choice, style=wx.CB_READONLY)
+        self.id += 1
+        self.x_value = wx.TextCtrl(self, self.id)	
+        self.id += 1		
+        self.gensizer.Add(x_title, 0, wx.EXPAND, 5)			
+        self.gensizer.Add(self.x_choice, 0, wx.EXPAND, 5)			
+        self.gensizer.Add(self.x_value, 0, wx.EXPAND, 5)	
+		
+        self.alpha_choice.Bind(wx.EVT_COMBOBOX, self.on_alpha_choice_changed)	
+        self.x_value.Bind(wx.EVT_TEXT, self.on_x_value_changed)
+        self.x_choice.Bind(wx.EVT_COMBOBOX, self.on_x_choice_changed)		
+    
+    def updated_algo_choice(self, samples):
+        self.sample_algo_choice = samples
+        self.algo_choice.Clear()		
+        for sample in self.sample_algo_choice:
+		    self.algo_choice.Append(sample)
+
+    def updated_alpha_choice(self, samples):
+        self.sample_alpha_choice = samples
+        self.alpha_choice.Clear()		
+        for sample in self.sample_alpha_choice:
+		    self.alpha_choice.Append(sample)
+
+    def updated_x_choice(self, samples):
+        self.sample_x_choice = samples
+        self.x_choice.Clear()		
+        for sample in self.sample_x_choice:
+		    self.x_choice.Append(sample)			
+		
+    def on_load_dataset(self, evt):
+        self.dirname=""  #set directory name to blank
+        dlg = wx.FileDialog(self, "Choose a file to open", self.dirname, "", "*.*", wx.OPEN) #open the dialog boxto open file
+        if dlg.ShowModal() == wx.ID_OK:  #if positive button selected....
+            self.filename = dlg.GetFilename()  #get the filename of the file
+            self.dirname = dlg.GetDirectory()  #get the directory of where file is located
+            self.parent.mlt.loadData(os.path.join(self.dirname, self.filename))  #traverse the file directory and find filename in the OS
+        else:
+            pass		
+        dlg.Destroy()
+        if (self.parent.panel_plotting_helper):
+            self.parent.panel_plotting_helper.fig.clf()
+            self.parent.panel_plotting_helper.update_canvas() 			 
+        else:
+            pass		
+        self.updated_x_choice(self.parent.mlt.features)
+        self.x_values = np.zeros(len(self.parent.mlt.features))
+
+    def on_algo_changed(self, evt):
+        idx = evt.GetSelection()
+        if (self.parent.mlt):	
+            method_call = getattr(self.parent.mlt, self.sample_algo_choice[idx])
+            method_call()
+            self.delete_attributes()		
+            self.result = self.parent.mlt.result
+            if (len(self.result) > 1):
+                #self.alphas = self.result.keys()
+                self.updated_alpha_choice(self.result.keys())				
+            else:
+                self.theta = self.result['0']['theta']
+                self.estimate_y()				
+            if ((self.sample_algo_choice[idx] == 'lrByGradientDescent') and (len(self.sample_alpha_choice)>0)):
+                self.generate_lrByGradientDescent(True)
+            else:
+                self.generate_lrByGradientDescent(False)	
+        else:			
+            pass	
+	
+    def delete_attributes(self):
+        self.sample_alpha_choice = []	
+        if (hasattr(self, 'theta')):
+            del self.theta
+        else: 
+            pass
+        if (hasattr(self, 'mean')):
+            del self.mean
+        else: 
+            pass			
+        if (hasattr(self, 'std')):
+            del self.std
+        else: 
+            pass	
+	
+    def generate_lrByGradientDescent(self, isShown):
+        if isShown:
+            self.alpha_title.Enable()
+            self.alpha_choice.Enable()
+        else:
+            self.alpha_title.Disable()
+            self.alpha_choice.Disable()		
+
+    def on_alpha_choice_changed(self, evt):
+        idx = evt.GetSelection()
+        alpha = self.sample_alpha_choice[idx]
+        self.theta = self.result[alpha]['theta']		
+        self.mean = self.result[alpha]['mean']
+        self.std = self.result[alpha]['std']	
+        self.estimate_y()		
+		
+    def on_x_choice_changed(self, evt):
+        self.x_idx = evt.GetSelection()
+
+    def on_x_value_changed(self, evt):	
+        if (self.x_idx in range(len(self.x_values)) and hasattr(self, 'theta')):
+            try: 
+                self.x_values[self.x_idx] = self.x_value.GetValue()
+                self.show_x_values.SetValue('' + str(self.x_values))
+                self.estimate_y()				
+            except ValueError:
+                print(ValueError)			
+                self.show_x_values.SetValue('You must enter a number!!! Please')			
+        else:
+            pass		 
+        #self.show_x_values.SetValue('Your test x_array is ' + str(self.x_values))		
+        pass	
+
+    def estimate_y(self):
+        xx = np.zeros((1, len(self.x_values)+1))
+        xx[0][0] = 1
+        for i in range(len(self.x_values)):
+            xx[0][i+1] = self.x_values[i]		        
+        if (hasattr(self, 'mean') and hasattr(self, 'std')):	
+            for i in range(len(self.x_values)):
+                xx[0][i+1] = (self.x_values[i] - self.mean[i]) / self.std[i]			
+        else:
+            pass		
+        y = np.dot(xx, self.theta)
+        self.test_value.SetValue(str(y))		
+		
+		
 if __name__ == '__main__':
     ph = Panel_Plotting_Helper(parent=None, id=-1)
     print(ph)

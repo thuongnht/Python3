@@ -2,13 +2,15 @@
 # Choose file loading and update LR
 # Update Plotting with Traits UI
 # Update y with Traits UI
-import wx
 import sys
-# Add the ptdraft folder path to the sys.path list
-sys.path.append('./../Machine_Learning')
-sys.path.append('./Linear_Regression')
 
-from Linear_Regression.ML_Frame import ML_Frame
+import wx
+
+# Add the ptdraft folder path to the sys.path list
+# sys.path.append('./../Machine_Learning')
+# sys.path.append('./Linear_Regression')
+
+from ML_Frame import ML_Frame
 
 
 class ML_UI(wx.App):

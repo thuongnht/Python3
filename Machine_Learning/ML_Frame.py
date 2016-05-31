@@ -1,7 +1,7 @@
 # plot 2d matplotlib
 # plot 3d miyavi
 import wx
-from ML_Panel import Panel_Plotting_Helper, Panel_Controller
+from Linear_Regression.ML_Panel import Panel_Plotting_Helper, Panel_Controller
 from Machine_Learning_Tools import Machine_Learning_Tools
 
 

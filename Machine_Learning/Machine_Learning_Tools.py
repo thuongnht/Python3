@@ -4,6 +4,7 @@
 import pandas as pd
 import numpy as np
 from scipy import *
+from os import path
 
 from Linear_Regression.Linear_Regression_Helper import Linear_Regression_Helper
 
@@ -12,7 +13,8 @@ class Machine_Learning_Tools(object):
 
     def __init__(self, plotting_helper):
         self.ph = plotting_helper
-        self.loadData('./Linear_Regression/ex1data2.txt')
+        fileName = path.join(path.dirname(__file__), "Linear_Regression/ex1data2.txt")
+        self.loadData(fileName)
         self.algo_choices = ['lrByGradientDescent', 'lrByNormalEquation']
 
     def loadData(self, filename):

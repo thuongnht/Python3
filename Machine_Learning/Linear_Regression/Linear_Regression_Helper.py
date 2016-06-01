@@ -56,18 +56,18 @@ class Linear_Regression_Helper(object):
     def normal_equation(self):
         data = pd.concat([self.data], axis=1)
         target = pd.concat([self.target], axis=1)
-
+        # pinv(transpose(X)*X)*transpose(X)*y;
         return np.dot(np.dot(linalg.pinv(np.dot(data.transpose(), data)), data.transpose()), target);
 
-    def fit(self, data, target, type):
+    def Fit(self, data, target, choice):
         self.m = len(data.axes[0])
         self.n = len(data.axes[1]) + 1
         self.target = target
 
-        x0 = pd.DataFrame(1, index=np.arange(self.m), columns=['x0'])
+        x0 = pd.DataFrame(1.0, index=np.arange(self.m), columns=['x0'])
         self.data = pd.concat([x0, data], axis=1)
 
-        if type == 'gd':
+        if choice == 'gd':
             print('Running Gradient Descent ...')
 
             normalized_data, mean, std = self.feature_normalize(data)
@@ -88,7 +88,7 @@ class Linear_Regression_Helper(object):
                 self.result[str(alphas[i])] = {
                     'data': {
                         'x': data.iloc[:, 0],
-                        'y': np.dot(self.data, end_theta[i,:].transpose())
+                        'y': np.dot(self.data, end_theta[i, :].transpose())
                     },
                     'J_history': J_history[i, :].transpose(),
                     'alphas': alphas,
@@ -101,7 +101,7 @@ class Linear_Regression_Helper(object):
 
             return self.result
 
-        elif type == 'ne':
+        elif choice == 'ne':
             print('Solving with Normal Equation ...')
 
             end_theta = self.normal_equation()

@@ -2,8 +2,6 @@
 # Choose file loading and update LR
 # Update Plotting with Traits UI
 # Update y with Traits UI
-import sys
-
 import wx
 
 # Add the ptdraft folder path to the sys.path list
